@@ -1,0 +1,5 @@
+F:\GitHub\SocketAsync\Log\bin\Debug\LogLib.dll
+F:\GitHub\SocketAsync\Log\bin\Debug\LogLib.pdb
+F:\GitHub\SocketAsync\Log\obj\Debug\LogLib.csproj.CoreCompileInputs.cache
+F:\GitHub\SocketAsync\Log\obj\Debug\LogLib.dll
+F:\GitHub\SocketAsync\Log\obj\Debug\LogLib.pdb
