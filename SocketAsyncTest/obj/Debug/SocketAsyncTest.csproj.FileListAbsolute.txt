@@ -6,3 +6,16 @@ F:\GitHub\SocketAsync\SocketAsyncTest\obj\Debug\SocketAsyncTest.csproj.GenerateR
 F:\GitHub\SocketAsync\SocketAsyncTest\obj\Debug\SocketAsyncTest.csproj.CoreCompileInputs.cache
 F:\GitHub\SocketAsync\SocketAsyncTest\obj\Debug\SocketAsync.exe
 F:\GitHub\SocketAsync\SocketAsyncTest\obj\Debug\SocketAsync.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\bin\Debug\SocketAsync.exe
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\bin\Debug\SocketAsync.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\bin\Debug\SocketAsyncLib.dll
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\bin\Debug\LogLib.dll
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\bin\Debug\SocketAsyncLib.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\bin\Debug\LogLib.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsyncTest.csprojResolveAssemblyReference.cache
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsync.Properties.Resources.resources
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsyncTest.csproj.GenerateResource.Cache
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsyncTest.csproj.CoreCompileInputs.cache
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsync.exe
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsync.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncTest\obj\Debug\SocketAsyncTest.Form1.resources

@@ -6,3 +6,11 @@ F:\GitHub\SocketAsync\SocketAsyncLib\bin\Debug\LogLib.dll
 F:\GitHub\SocketAsync\SocketAsyncLib\bin\Debug\LogLib.pdb
 F:\GitHub\SocketAsync\SocketAsyncLib\obj\Debug\SocketAsyncLib.dll
 F:\GitHub\SocketAsync\SocketAsyncLib\obj\Debug\SocketAsyncLib.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\bin\Debug\SocketAsyncLib.dll
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\bin\Debug\SocketAsyncLib.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\bin\Debug\LogLib.dll
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\bin\Debug\LogLib.pdb
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\obj\Debug\SocketAsyncLib.csprojResolveAssemblyReference.cache
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\obj\Debug\SocketAsyncLib.csproj.CoreCompileInputs.cache
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\obj\Debug\SocketAsyncLib.dll
+F:\GitHub\SokcetAsyncEvent\SocketAsyncLib\obj\Debug\SocketAsyncLib.pdb

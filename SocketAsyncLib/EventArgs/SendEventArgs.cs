@@ -9,10 +9,6 @@ namespace SocketAsyncLib
     public class SendEventArgs:EventArgs
     {
         /// <summary>
-        /// 发送的数据包
-        /// </summary>
-        public byte[] Receive { get; set; }
-        /// <summary>
         /// 当前SOCKET OBJECT
         /// </summary>
         public SocketSession Session { get; set; }

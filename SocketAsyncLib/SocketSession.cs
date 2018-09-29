@@ -8,8 +8,14 @@ namespace SocketAsyncLib
 {
     public class SocketSession
     {
+        /// <summary>
+        /// Id with Socket
+        /// </summary>
         public string SessionId { get; set; }
-
+        /// <summary>
+        /// Socket
+        /// </summary>
         public Socket Client { get; set; }
+
     }
 }

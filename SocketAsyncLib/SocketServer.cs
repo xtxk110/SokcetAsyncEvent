@@ -19,6 +19,7 @@ namespace SocketAsyncLib
         private EndPoint Local;
         private BufferManage Buffer;//SocketAsyncEventArgs对象管理
         private ConcurrentDictionary<string, SocketSession> _dic = new ConcurrentDictionary<string, SocketSession>();// 存储SOCKET连接 key:sessionid
+        private ConcurrentDictionary<string, MySocketAsyncEventArgs> _argsDic = new ConcurrentDictionary<string, MySocketAsyncEventArgs>();// 存储SocketAsyncEventArgs key:sessionid
         /// <summary>
         /// 存储SOCKET连接 key:sessionid
         /// </summary>
@@ -26,23 +27,27 @@ namespace SocketAsyncLib
         /// <summary>
         /// SOCKET监听事件,成功返回监听地址;失败返回错误信息
         /// </summary>
-        public EventHandler ListenEvent;
+        public event EventHandler ListenEvent;
         /// <summary>
         /// 新SOCKET连接事件,
         /// </summary>
-        public EventHandler NewSessionEvent;
+        public event EventHandler NewSessionEvent;
         /// <summary>
         /// 接收到数据包事件(未过滤)
         /// </summary>
-        public EventHandler ReceiveEvent;
+        public event EventHandler ReceiveEvent;
         /// <summary>
-        /// 根据相关协议过滤返回的可用的完整数据包
+        /// 根据相关协议过滤返回的可用的完整数据包(未实现)
         /// </summary>
-        public EventHandler RecieveFilterEvent;
+        public event EventHandler RecieveFilterEvent;
+        /// <summary>
+        /// 发送数据包成功事件
+        /// </summary>
+        public event EventHandler SendEvent;
         /// <summary>
         /// SOCKET关闭事件
         /// </summary>
-        public EventHandler CloseSessionEvent;
+        public event EventHandler CloseSessionEvent;
 
         private int _MaxListen = 10000;
         /// <summary>
@@ -85,7 +90,7 @@ namespace SocketAsyncLib
             }catch(Exception e) { Log.WriteLog(e.TargetSite + "->" + e.Message, LogType.ERROR); }
         }
         /// <summary>
-        /// 监听ocket
+        /// 启动SOCKET服务
         /// </summary>
         public void Start()
         {
@@ -131,19 +136,20 @@ namespace SocketAsyncLib
             {
                 Interlocked.Increment(ref _CurConn);//改当前连接数
                 string guid = Guid.NewGuid().ToString("N");
-                SocketSession session = new SocketSession { Client = saea.AcceptSocket, SessionId = guid };
-                NewSessionEvent?.Invoke(null, new SessionEventArgs { Type = SessionType.NEW, Endpoint = saea.AcceptSocket.RemoteEndPoint.ToString(), Session = session });
-                _dic.TryAdd(guid, session);
-
+                SocketSession session = new SocketSession { Client = saea.AcceptSocket, SessionId = guid }; 
+                _dic.TryAdd(guid, session);//添加SokcetSession
                 MySocketAsyncEventArgs msaea = Buffer.GetSocketEvent();//从池中获取一个SocketAsyncEventArgs
                 msaea.UserToken = session;
                 msaea.SetBuffer(Buffer.Buffer, msaea.CurrentIndex * this.BufferSize, this.BufferSize);//设置连接的缓冲区
                 msaea.Completed -= IO_Completed;
                 msaea.Completed += IO_Completed;
+                _argsDic.TryAdd(guid, msaea);//添加SocketAsyncEventArgs
+
+                NewSessionEvent?.Invoke(null, new SessionEventArgs { Type = SessionType.NEW, Endpoint = saea.AcceptSocket.RemoteEndPoint.ToString(), Session = session });
                 bool resultFlag= saea.AcceptSocket.ReceiveAsync(msaea);
                 if (!resultFlag)
                     ProcessReceive(msaea);
-            }catch(Exception e) { Log.WriteLog(e.TargetSite + "->" + e.Message, LogType.ERROR); }
+            }catch(Exception e) { Log.WriteLog(e.TargetSite + "->" + e.Message, LogType.INFO); }
 
             StartAccept(saea);
         }
@@ -155,19 +161,22 @@ namespace SocketAsyncLib
         /// <param name="e"></param>
         private void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
-            MySocketAsyncEventArgs msaea = e as MySocketAsyncEventArgs;
-            if(msaea != null)
+            if (e is MySocketAsyncEventArgs msaea)
             {
-                switch (msaea.LastOperation)
+                try
                 {
-                    case SocketAsyncOperation.Receive:
-                        ProcessReceive(msaea);
-                        break;
-                    case SocketAsyncOperation.Send:
-                        break;
-                    default:
-                        break;
-                }
+                    switch (msaea.LastOperation)
+                    {
+                        case SocketAsyncOperation.Receive:
+                            ProcessReceive(msaea);
+                            break;
+                        case SocketAsyncOperation.Send:
+                            ProcessSend(msaea);
+                            break;
+                        default:
+                            break;
+                    }
+                }catch(Exception e1) { Log.WriteLog(e1.TargetSite + "->" + e1.Message, LogType.ERROR); }
             }
         }
         /// <summary>
@@ -191,16 +200,61 @@ namespace SocketAsyncLib
                 }
                 else
                     Log.WriteLog(msaea.SocketError.ToString(), LogType.INFO);
+
+                ////接收下一个数据包
+                bool resultFlag = session.Client.ReceiveAsync(msaea);
+                if (!resultFlag)
+                    ProcessReceive(msaea);
             }
             else
                 CloseClientSocket(msaea,CloseReason.PASSIVE_CLOSE);
         }
+        /// 数据发送
+        /// </summary>
+        /// <param name="sendData">send data byte[]</param>
+        /// <param name="sessionId">SocketSession sessionId</param>
+        public void Send(string sessionId,byte[] sendData)
+        {
+            bool flag1= _dic.TryGetValue(sessionId, out SocketSession session);
+            bool flag2= _argsDic.TryGetValue(sessionId, out MySocketAsyncEventArgs args);
+            if (!flag1 || !flag2)
+                Log.WriteLog("提供的SESSIONID已失效", LogType.INFO);
+            int sendLen = sendData.Length;
+            System.Buffer.BlockCopy(sendData, 0, args.Buffer, args.Offset, sendLen);
+            try
+            {
+                args.SetBuffer(args.Offset, sendLen);
+                var resultFlag = session.Client.SendAsync(args);
+                if (!resultFlag)
+                    ProcessSend(args);
+            }catch(Exception e) { Log.WriteLog(e.TargetSite + "->" + e.Message, LogType.ERROR); }
+        }
+        /// <summary>
+        /// 数据发送具体执行
+        /// </summary>
+        /// <param name="msae"></param>
+        private void ProcessSend(MySocketAsyncEventArgs msae)
+        {
+            if (msae.SocketError == SocketError.Success)
+            {
+                if (SendEvent != null)
+                {
+                    SocketSession session = msae.UserToken as SocketSession;
+                    SendEvent(null, new SendEventArgs { Session = session });
+                }
+            }
+            else
+            {
+                CloseClientSocket(msae,CloseReason.PASSIVE_CLOSE);
+            }
+        }
         //关闭SOCKET连接
-        private void CloseClientSocket(MySocketAsyncEventArgs msaea,CloseReason reason)
+        private void CloseClientSocket(MySocketAsyncEventArgs msaea, CloseReason reason)
         {
             SocketSession session = (SocketSession)msaea.UserToken;
             CloseSessionEvent?.Invoke(null, new SessionEventArgs { Type = SessionType.CLOSED, Reason = reason, Endpoint = session.Client.RemoteEndPoint.ToString() });
-            _dic.TryRemove(session.SessionId, out SocketSession outValue);//移除关闭的连接
+            try { _dic.TryRemove(session.SessionId, out SocketSession outValue); _argsDic.TryRemove(session.SessionId, out MySocketAsyncEventArgs eventArgs); }//移除关闭的连接
+            catch (Exception e) { Log.WriteLog(e.TargetSite + "->" + e.Message, LogType.ERROR); }
             try
             {
                 session.Client.Shutdown(SocketShutdown.Send);
@@ -209,13 +263,15 @@ namespace SocketAsyncLib
             try
             {
                 session.Client.Close();
-            }catch(Exception e) { }
-           
+            }
+            catch (Exception e) { }
+
             Interlocked.Decrement(ref _CurConn);//当前连接数自减
             msaea.UserToken = null;
             Buffer.FreeSocketEvent(msaea);//把关闭的事件对象,放入集合中
-            
+
         }
+        /// <summary>
         /// <summary>
         /// 通过sessionId获取SocketSession
         /// </summary>
@@ -227,6 +283,31 @@ namespace SocketAsyncLib
                 return outValue;
             else
                 return null;
+        }
+        /// <summary>
+        /// 关闭SOCKET服务
+        /// </summary>
+        public void Close()
+        {
+            try
+            {
+                Server.Shutdown(SocketShutdown.Both);
+                Server.Close();
+                Server.Dispose();
+            }catch { }
+            foreach(var item in _dic.Values)
+            {
+                try
+                {
+                    item.Client.Shutdown(SocketShutdown.Both);
+                    item.Client.Close();
+                    item.Client.Dispose();
+                }
+                catch { }
+            }
+            _dic.Clear();
+            _argsDic.Clear();
+            Buffer = null;
         }
     }
 }
